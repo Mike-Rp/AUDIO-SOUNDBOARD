@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theater Soundboard System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            color: #ffffff;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .upload-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .volume-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 250px;
+        }
+
+        .upload-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .stop-all-btn {
+            background: linear-gradient(135deg, #ff4757 0%, #cc0033 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        .stop-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5);
+        }
+
+        .volume-label {
+            font-weight: 600;
+            min-width: 120px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            min-width: 150px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #00d4ff;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #00d4ff;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            border: none;
+        }
+
+        .volume-value {
+            font-weight: 600;
+            color: #00d4ff;
+            min-width: 45px;
+        }
+
+        /* Soundboard Grid */
+        .soundboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .sound-button {
+            position: relative;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 153, 204, 0.1) 100%);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .sound-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+            border-color: rgba(0, 212, 255, 0.6);
+        }
+
+        .sound-button.playing {
+            background: linear-gradient(135deg, rgba(0, 255, 127, 0.2) 0%, rgba(0, 200, 100, 0.2) 100%);
+            border-color: #00ff7f;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(0, 255, 127, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 255, 127, 0.8);
+            }
+        }
+
+        .sound-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .sound-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .control-btn.loop-active {
+            background: #00ff7f;
+            color: #1e1e2e;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 71, 87, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            opacity: 0.7;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1.2em;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .controls-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .soundboard {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 10px;
+            }
+
+            .sound-button {
+                min-height: 80px;
+                padding: 15px;
+            }
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(0, 212, 255, 0.95);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎭 Theater Soundboard</h1>
+            <p>Upload and manage your show's audio files</p>
+        </header>
+
+        <div class="control-panel">
+            <div class="controls-row">
+                <div class="upload-section">
+                    <div class="upload-box">
+                        <input type="file" id="audioUpload" accept="audio/*" multiple>
+                        <button class="upload-btn" onclick="document.getElementById('audioUpload').click()">
+                            📁 Upload Audio Files
+                        </button>
+                        <button class="stop-all-btn" onclick="stopAllSounds()">
+                            ⏹️ Stop All
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="volume-section">
+                    <span class="volume-label">🔊 Master Volume:</span>
+                    <input type="range" id="masterVolume" min="0" max="100" value="80" 
+                           oninput="updateMasterVolume(this.value)">
+                    <span class="volume-value" id="volumeDisplay">80%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="soundboard" id="soundboard">
+            <div class="empty-state">
+                👆 Upload audio files to get started!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===================================
+        // SOUNDBOARD SYSTEM
+        // ===================================
+        
+        // Global storage for audio data
+        let sounds = JSON.parse(localStorage.getItem('theaterSounds')) || [];
+        let audioElements = {}; // Store audio element references
+        let masterVolume = 0.8; // Default master volume (80%)
+
+        // ===================================
+        // INITIALIZATION
+        // ===================================
+        
+        // Load saved volume setting
+        const savedVolume = localStorage.getItem('masterVolume');
+        if (savedVolume) {
+            masterVolume = parseFloat(savedVolume);
+            document.getElementById('masterVolume').value = masterVolume * 100;
+            document.getElementById('volumeDisplay').textContent = Math.round(masterVolume * 100) + '%';
+        }
+
+        // Initialize soundboard on page load
+        window.addEventListener('load', () => {
+            renderSoundboard();
+        });
+
+        // ===================================
+        // FILE UPLOAD HANDLING
+        // ===================================
+        
+        document.getElementById('audioUpload').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            
+            if (files.length === 0) return;
+
+            files.forEach(file => {
+                // Only process audio files
+                if (!file.type.startsWith('audio/')) {
+                    showToast('⚠️ Only audio files are allowed');
+                    return;
+                }
+
+                // Read file as data URL
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Get filename without extension for button name
+                    const fileName = file.name.replace(/\.[^/.]+$/, "");
+                    
+                    // Create sound object
+                    const sound = {
+                        id: Date.now() + Math.random(), // Unique ID
+                        name: fileName,
+                        data: event.target.result, // Base64 audio data
+                        loop: false
+                    };
+
+                    // Add to sounds array
+                    sounds.push(sound);
+                    
+                    // Save to localStorage
+                    saveSounds();
+                    
+                    // Re-render soundboard
+                    renderSoundboard();
+                    
+                    showToast(`✅ Added: ${fileName}`);
+                };
+                
+                reader.readAsDataURL(file);
+            });
+
+            // Clear input for re-upload
+            e.target.value = '';
+        });
+
+        // ===================================
+        // SOUNDBOARD RENDERING
+        // ===================================
+        
+        function renderSoundboard() {
+            const soundboard = document.getElementById('soundboard');
+            
+            if (sounds.length === 0) {
+                soundboard.innerHTML = `
+                    <div class="empty-state">
+                        👆 Upload audio files to get started!
+                    </div>
+                `;
+                return;
+            }
+
+            soundboard.innerHTML = '';
+
+            sounds.forEach(sound => {
+                const button = document.createElement('div');
+                button.className = 'sound-button';
+                button.innerHTML = `
+                    <button class="delete-btn" onclick="deleteSound('${sound.id}')" title="Delete sound">
+                        ×
+                    </button>
+                    <div class="sound-name">${sound.name}</div>
+                    <div class="sound-controls">
+                        <button class="control-btn" onclick="playSound('${sound.id}')">▶️ Play</button>
+                        <button class="control-btn" onclick="pauseSound('${sound.id}')">⏸️ Pause</button>
+                        <button class="control-btn ${sound.loop ? 'loop-active' : ''}" 
+                                onclick="toggleLoop('${sound.id}')">
+                            🔁 Loop
+                        </button>
+                    </div>
+                `;
+
+                // Add click event to main button area (not controls)
+                button.addEventListener('click', (e) => {
+                    // Only trigger if clicking the button itself, not the controls
+                    if (e.target === button || e.target.classList.contains('sound-name')) {
+                        playSound(sound.id);
+                    }
+                });
+
+                soundboard.appendChild(button);
+
+                // Create audio element if it doesn't exist
+                if (!audioElements[sound.id]) {
+                    const audio = new Audio(sound.data);
+                    audio.volume = masterVolume;
+                    audio.loop = sound.loop;
+                    
+                    // Update button state when audio ends
+                    audio.addEventListener('ended', () => {
+                        if (!audio.loop) {
+                            updateButtonState(sound.id, false);
+                        }
+                    });
+
+                    audioElements[sound.id] = audio;
+                }
+            });
+        }
+
+        // ===================================
+        // PLAYBACK CONTROLS
+        // ===================================
+        
+        function playSound(id) {
+            const audio = audioElements[id];
+            if (!audio) return;
+
+            // If already playing, restart from beginning
+            if (!audio.paused) {
+                audio.currentTime = 0;
+            }
+
+            audio.play();
+            updateButtonState(id, true);
+        }
+
+        function pauseSound(id) {
+            const audio = audioElements[id];
+            if (!audio) return;
+
+            audio.pause();
+            updateButtonState(id, false);
+        }
+
+        function stopAllSounds() {
+            Object.values(audioElements).forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+
+            // Remove playing state from all buttons
+            document.querySelectorAll('.sound-button').forEach(btn => {
+                btn.classList.remove('playing');
+            });
+
+            showToast('⏹️ All sounds stopped');
+        }
+
+        function toggleLoop(id) {
+            const sound = sounds.find(s => s.id == id);
+            if (!sound) return;
+
+            sound.loop = !sound.loop;
+            
+            const audio = audioElements[id];
+            if (audio) {
+                audio.loop = sound.loop;
+            }
+
+            saveSounds();
+            renderSoundboard();
+        }
+
+        function updateButtonState(id, isPlaying) {
+            const buttons = document.querySelectorAll('.sound-button');
+            buttons.forEach(button => {
+                const playBtn = button.querySelector('.control-btn');
+                if (playBtn && playBtn.onclick.toString().includes(id)) {
+                    if (isPlaying) {
+                        button.classList.add('playing');
+                    } else {
+                        button.classList.remove('playing');
+                    }
+                }
+            });
+        }
+
+        // ===================================
+        // VOLUME CONTROL
+        // ===================================
+        
+        function updateMasterVolume(value) {
+            masterVolume = value / 100;
+            document.getElementById('volumeDisplay').textContent = value + '%';
+            
+            // Update all audio elements
+            Object.values(audioElements).forEach(audio => {
+                audio.volume = masterVolume;
+            });
+
+            // Save to localStorage
+            localStorage.setItem('masterVolume', masterVolume);
+        }
+
+        // ===================================
+        // SOUND MANAGEMENT
+        // ===================================
+        
+        function deleteSound(id) {
+            if (!confirm('Are you sure you want to delete this sound?')) return;
+
+            // Stop and remove audio element
+            if (audioElements[id]) {
+                audioElements[id].pause();
+                delete audioElements[id];
+            }
+
+            // Remove from sounds array
+            sounds = sounds.filter(s => s.id != id);
+            
+            saveSounds();
+            renderSoundboard();
+            
+            showToast('🗑️ Sound deleted');
+        }
+
+        function saveSounds() {
+            localStorage.setItem('theaterSounds', JSON.stringify(sounds));
+        }
+
+        // ===================================
+        // UI NOTIFICATIONS
+        // ===================================
+        
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // ===================================
+        // KEYBOARD SHORTCUTS (Optional Enhancement)
+        // ===================================
+        
+        // You can add keyboard shortcuts here if needed
+        // For example: Press 1-9 to play sounds 1-9
+        document.addEventListener('keydown', (e) => {
+            // Space bar to stop all sounds
+            if (e.code === 'Space' && e.target === document.body) {
+                e.preventDefault();
+                stopAllSounds();
+            }
+        });
+    </script>
+</body>
+</html>
